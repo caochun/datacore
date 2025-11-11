@@ -1,0 +1,47 @@
+name: 'datacore'
+version: '1.0.0'
+config-version: 2
+
+profile: 'datacore'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  datacore:
+    staging:
+      +materialized: view
+      +schema: staging
+    ods:
+      +materialized: table
+      +schema: ods
+    dwd:
+      +materialized: table
+      +schema: dwd
+    dws:
+      +materialized: table
+      +schema: dws
+    ads:
+      +materialized: table
+      +schema: ads
+    metadata:
+      +materialized: table
+      +schema: metadata
+
+seeds:
+  datacore:
+    +quote_columns: true
+
+vars:
+  project_name: "高速公路省级收费中心数据中台"
+  data_source: "duckdb"
+

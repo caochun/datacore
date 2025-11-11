@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: ads_toll_revenue_report
+    description: "收费收入报表，面向业务应用的收入报表"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: city
+        description: "城市"
+        meta:
+          column_name_cn: "城市"
+      - name: daily_revenue
+        description: "日收入（元）"
+        meta:
+          column_name_cn: "日收入"
+      - name: daily_transactions
+        description: "日交易笔数"
+        meta:
+          column_name_cn: "日交易笔数"
+      - name: normal_rate
+        description: "正常交易率"
+        meta:
+          column_name_cn: "正常交易率"
+    meta:
+      table_name_cn: "收费收入报表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "日"
+      owner: "收费中心"
+      application: "收入报表"
+      
+  - name: ads_traffic_trend_analysis
+    description: "车流趋势分析，车流趋势和模式分析"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: daily_vehicles
+        description: "日车流量"
+        meta:
+          column_name_cn: "日车流量"
+      - name: etc_usage_rate
+        description: "ETC使用率"
+        meta:
+          column_name_cn: "ETC使用率"
+    meta:
+      table_name_cn: "车流趋势分析表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "日"
+      owner: "收费中心"
+      application: "趋势分析"
+      
+  - name: ads_quality_monitoring_dashboard
+    description: "数据质量监控看板，数据质量监控和告警"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: normal_rate
+        description: "正常交易率"
+        meta:
+          column_name_cn: "正常交易率"
+      - name: data_quality_rate
+        description: "数据质量率"
+        meta:
+          column_name_cn: "数据质量率"
+      - name: alert_status
+        description: "告警状态：正常/告警"
+        meta:
+          column_name_cn: "告警状态"
+    meta:
+      table_name_cn: "数据质量监控看板"
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      update_frequency: "实时"
+      owner: "数据管理部"
+      application: "质量监控"
+

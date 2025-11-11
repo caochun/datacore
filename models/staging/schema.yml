@@ -1,0 +1,133 @@
+version: 2
+
+models:
+  - name: stg_toll_transaction
+    description: "收费交易数据清洗层，进行数据清洗、标准化和异常值处理"
+    columns:
+      - name: transaction_id
+        description: "交易ID，唯一标识一笔交易"
+        meta:
+          column_name_cn: "交易ID"
+        tests:
+          - unique
+          - not_null
+      - name: station_id
+        description: "收费站ID"
+        meta:
+          column_name_cn: "收费站ID"
+        tests:
+          - not_null
+      - name: vehicle_plate
+        description: "车牌号（已清洗）"
+        meta:
+          column_name_cn: "车牌号"
+      - name: vehicle_type_code
+        description: "车型编码"
+        meta:
+          column_name_cn: "车型编码"
+      - name: entry_time
+        description: "入口时间"
+        meta:
+          column_name_cn: "入口时间"
+      - name: exit_time
+        description: "出口时间（已清洗）"
+        meta:
+          column_name_cn: "出口时间"
+      - name: travel_minutes
+        description: "通行时长（分钟）"
+        meta:
+          column_name_cn: "通行时长"
+      - name: toll_amount
+        description: "应收金额（元）"
+        meta:
+          column_name_cn: "应收金额"
+      - name: actual_amount
+        description: "实收金额（元，已清洗）"
+        meta:
+          column_name_cn: "实收金额"
+      - name: data_quality_flag
+        description: "数据质量标记：正常/数据缺失/收费站缺失/车牌缺失/时间异常/金额异常"
+        meta:
+          column_name_cn: "数据质量标记"
+    meta:
+      table_name_cn: "收费交易清洗表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "实时"
+      owner: "收费中心"
+      
+  - name: stg_toll_station
+    description: "收费站数据清洗层"
+    columns:
+      - name: station_id
+        description: "收费站ID，主键"
+        meta:
+          column_name_cn: "收费站ID"
+        tests:
+          - unique
+          - not_null
+      - name: station_name
+        description: "收费站名称"
+        meta:
+          column_name_cn: "收费站名称"
+      - name: city
+        description: "所属城市"
+        meta:
+          column_name_cn: "所属城市"
+      - name: highway_code
+        description: "高速公路编码"
+        meta:
+          column_name_cn: "高速公路编码"
+    meta:
+      table_name_cn: "收费站清洗表"
+      business_domain: "路网管理"
+      data_source: "路网管理系统"
+      update_frequency: "按需"
+      owner: "路网管理部"
+      
+  - name: stg_vehicle_type_dict
+    description: "车型字典数据清洗层"
+    columns:
+      - name: vehicle_type_code
+        description: "车型编码，主键"
+        meta:
+          column_name_cn: "车型编码"
+        tests:
+          - unique
+          - not_null
+      - name: vehicle_type_name
+        description: "车型名称"
+        meta:
+          column_name_cn: "车型名称"
+      - name: toll_rate_multiplier
+        description: "收费费率系数"
+        meta:
+          column_name_cn: "收费费率系数"
+    meta:
+      table_name_cn: "车型字典清洗表"
+      business_domain: "基础数据"
+      data_source: "收费政策"
+      update_frequency: "按政策调整"
+      owner: "政策法规部"
+      
+  - name: stg_payment_method_dict
+    description: "支付方式字典数据清洗层"
+    columns:
+      - name: payment_method_code
+        description: "支付方式编码，主键"
+        meta:
+          column_name_cn: "支付方式编码"
+        tests:
+          - unique
+          - not_null
+      - name: payment_method_name
+        description: "支付方式名称"
+        meta:
+          column_name_cn: "支付方式名称"
+    meta:
+      table_name_cn: "支付方式字典清洗表"
+      business_domain: "基础数据"
+      data_source: "支付系统"
+      update_frequency: "按需"
+      owner: "支付中心"
+

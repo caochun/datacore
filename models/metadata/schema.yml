@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: meta_table_info
+    description: "表信息元数据表，记录所有数据表的元数据信息"
+    columns:
+      - name: schema_name
+        description: "模式名称"
+        meta:
+          column_name_cn: "模式名称"
+      - name: table_name
+        description: "表名"
+        meta:
+          column_name_cn: "表名"
+      - name: table_name_cn
+        description: "中文表名"
+        meta:
+          column_name_cn: "中文表名"
+      - name: table_description
+        description: "表描述"
+        meta:
+          column_name_cn: "表描述"
+      - name: business_domain
+        description: "业务域"
+        meta:
+          column_name_cn: "业务域"
+      - name: data_source
+        description: "数据源"
+        meta:
+          column_name_cn: "数据源"
+      - name: update_frequency
+        description: "更新频率"
+        meta:
+          column_name_cn: "更新频率"
+      - name: owner
+        description: "负责人/部门"
+        meta:
+          column_name_cn: "负责人"
+      - name: data_layer
+        description: "数据分层"
+        meta:
+          column_name_cn: "数据分层"
+    meta:
+      table_name_cn: "表信息元数据表"
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      
+  - name: meta_data_lineage
+    description: "数据溯源关系表，记录数据表之间的溯源关系"
+    columns:
+      - name: source_table
+        description: "源表"
+      - name: target_table
+        description: "目标表"
+      - name: transformation_type
+        description: "转换类型：清洗/关联/转换/汇总/聚合"
+      - name: transformation_desc
+        description: "转换描述"
+    meta:
+      table_name_cn: "数据溯源关系表"
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      
+  - name: meta_data_dictionary
+    description: "数据字典表，统一管理业务数据字典"
+    columns:
+      - name: dict_type
+        description: "字典类型"
+      - name: dict_code
+        description: "字典编码"
+      - name: dict_name
+        description: "字典名称"
+      - name: dict_desc
+        description: "字典描述"
+      - name: dict_value
+        description: "字典值"
+      - name: dict_source
+        description: "字典来源"
+    meta:
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      
+  - name: meta_data_asset_catalog
+    description: "数据资产目录，数据资产清单和价值评估"
+    columns:
+      - name: schema_name
+        description: "模式名称"
+      - name: table_name
+        description: "表名"
+      - name: asset_level
+        description: "资产等级：核心资产/应用资产/基础资产"
+      - name: usage_frequency
+        description: "使用频率：高频/中频/低频"
+      - name: data_freshness
+        description: "数据新鲜度：新鲜/较新/陈旧"
+    meta:
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      
+  - name: meta_data_quality_metrics
+    description: "数据质量指标表，记录数据质量指标和趋势"
+    columns:
+      - name: metric_date
+        description: "指标日期"
+      - name: table_name
+        description: "表名"
+      - name: overall_quality_score
+        description: "综合质量得分（0-100）"
+      - name: completeness_rate
+        description: "完整性率"
+      - name: accuracy_rate
+        description: "准确率"
+      - name: consistency_rate
+        description: "一致率"
+    meta:
+      business_domain: "数据管理"
+      data_source: "数据中台"
+

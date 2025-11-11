@@ -1,0 +1,19 @@
+version: 2
+
+tests:
+  - name: test_toll_transaction_completeness
+    description: "测试收费交易数据完整性，检查关键字段是否为空"
+    severity: error
+    
+  - name: test_toll_transaction_accuracy
+    description: "测试收费交易数据准确性，检查金额逻辑是否正确"
+    severity: error
+    
+  - name: test_toll_transaction_consistency
+    description: "测试收费交易数据一致性，检查时间逻辑是否正确"
+    severity: error
+    
+  - name: test_toll_transaction_referential_integrity
+    description: "测试收费交易数据引用完整性，检查外键关联是否正确"
+    severity: error
+

@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: ods_toll_transaction
+    description: "收费交易操作数据存储，保持业务原始逻辑，关联字典表，增加业务字段"
+    meta:
+      table_name_cn: "收费交易操作数据表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "实时"
+      owner: "收费中心"
+      
+  - name: ods_toll_station
+    description: "收费站操作数据存储"
+    meta:
+      table_name_cn: "收费站操作数据表"
+      business_domain: "路网管理"
+      data_source: "路网管理系统"
+      update_frequency: "按需"
+      owner: "路网管理部"
+

@@ -1,0 +1,27 @@
+{
+  "name": "datacore-web-ui",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "antd": "^5.11.0",
+    "axios": "^1.6.2",
+    "@ant-design/icons": "^5.2.6",
+    "echarts": "^5.4.3",
+    "echarts-for-react": "^3.0.2",
+    "react-cytoscapejs": "^1.2.1",
+    "cytoscape": "^3.27.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+

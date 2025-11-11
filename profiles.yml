@@ -1,0 +1,8 @@
+datacore:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'datacore.duckdb') }}"
+      schema: main
+

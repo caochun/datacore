@@ -1,0 +1,127 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "原始数据源层，包含从业务系统采集的原始数据"
+    schema: raw
+    tables:
+      - name: toll_transaction
+        description: "收费交易原始数据表，记录所有收费交易明细"
+        columns:
+          - name: transaction_id
+            description: "交易ID，唯一标识一笔交易"
+            data_type: varchar
+          - name: station_id
+            description: "收费站ID"
+            data_type: varchar
+          - name: lane_id
+            description: "收费车道ID"
+            data_type: varchar
+          - name: vehicle_plate
+            description: "车牌号"
+            data_type: varchar
+          - name: vehicle_type_code
+            description: "车型编码"
+            data_type: varchar
+          - name: entry_station_id
+            description: "入口收费站ID"
+            data_type: varchar
+          - name: entry_time
+            description: "入口时间"
+            data_type: timestamp
+          - name: exit_time
+            description: "出口时间"
+            data_type: timestamp
+          - name: payment_method_code
+            description: "支付方式编码"
+            data_type: varchar
+          - name: toll_amount
+            description: "应收金额（元）"
+            data_type: decimal
+          - name: actual_amount
+            description: "实收金额（元）"
+            data_type: decimal
+          - name: discount_amount
+            description: "优惠金额（元）"
+            data_type: decimal
+          - name: transaction_status
+            description: "交易状态：正常/异常/逃费/设备故障/数据缺失"
+            data_type: varchar
+          - name: create_time
+            description: "创建时间"
+            data_type: timestamp
+          - name: update_time
+            description: "更新时间"
+            data_type: timestamp
+        meta:
+          business_domain: "收费业务"
+          data_source: "收费系统"
+          update_frequency: "实时"
+          owner: "收费中心"
+          
+      - name: toll_station
+        description: "收费站基础信息表"
+        columns:
+          - name: station_id
+            description: "收费站ID，主键"
+            data_type: varchar
+          - name: station_name
+            description: "收费站名称"
+            data_type: varchar
+          - name: city
+            description: "所属城市"
+            data_type: varchar
+          - name: highway_code
+            description: "高速公路编码"
+            data_type: varchar
+          - name: station_type
+            description: "收费站类型：主线收费站/匝道收费站"
+            data_type: varchar
+          - name: open_date
+            description: "开通日期"
+            data_type: date
+        meta:
+          business_domain: "路网管理"
+          data_source: "路网管理系统"
+          update_frequency: "按需"
+          owner: "路网管理部"
+          
+      - name: vehicle_type_dict
+        description: "车型分类字典表"
+        columns:
+          - name: vehicle_type_code
+            description: "车型编码，主键"
+            data_type: varchar
+          - name: vehicle_type_name
+            description: "车型名称"
+            data_type: varchar
+          - name: vehicle_type_desc
+            description: "车型描述"
+            data_type: varchar
+          - name: toll_rate_multiplier
+            description: "收费费率系数"
+            data_type: decimal
+        meta:
+          business_domain: "基础数据"
+          data_source: "收费政策"
+          update_frequency: "按政策调整"
+          owner: "政策法规部"
+          
+      - name: payment_method_dict
+        description: "支付方式字典表"
+        columns:
+          - name: payment_method_code
+            description: "支付方式编码，主键"
+            data_type: varchar
+          - name: payment_method_name
+            description: "支付方式名称"
+            data_type: varchar
+          - name: payment_method_desc
+            description: "支付方式描述"
+            data_type: varchar
+        meta:
+          business_domain: "基础数据"
+          data_source: "支付系统"
+          update_frequency: "按需"
+          owner: "支付中心"
+

@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: dwd_toll_transaction_detail
+    description: "收费交易明细数据层，包含完整的业务明细数据和业务分类字段"
+    columns:
+      - name: transaction_id
+        description: "交易ID"
+        meta:
+          column_name_cn: "交易ID"
+        tests:
+          - unique
+          - not_null
+      - name: station_id
+        description: "收费站ID"
+        meta:
+          column_name_cn: "收费站ID"
+      - name: station_name
+        description: "收费站名称"
+        meta:
+          column_name_cn: "收费站名称"
+      - name: city
+        description: "所属城市"
+        meta:
+          column_name_cn: "所属城市"
+      - name: vehicle_plate
+        description: "车牌号"
+        meta:
+          column_name_cn: "车牌号"
+      - name: vehicle_type_name
+        description: "车型名称"
+        meta:
+          column_name_cn: "车型名称"
+      - name: toll_amount
+        description: "应收金额（元）"
+        meta:
+          column_name_cn: "应收金额"
+      - name: actual_amount
+        description: "实收金额（元）"
+        meta:
+          column_name_cn: "实收金额"
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: time_period
+        description: "时段分类：早高峰/晚高峰/平峰/夜间"
+        meta:
+          column_name_cn: "时段分类"
+      - name: day_type
+        description: "日期类型：工作日/周末"
+        meta:
+          column_name_cn: "日期类型"
+    meta:
+      table_name_cn: "收费交易明细表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "实时"
+      owner: "收费中心"
+

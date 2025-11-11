@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: dws_toll_revenue_daily
+    description: "日收费收入汇总，按日期、收费站、车型、支付方式等维度汇总"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: station_id
+        description: "收费站ID"
+        meta:
+          column_name_cn: "收费站ID"
+      - name: total_actual_amount
+        description: "日实收金额汇总（元）"
+        meta:
+          column_name_cn: "日实收金额"
+      - name: transaction_count
+        description: "交易笔数"
+        meta:
+          column_name_cn: "交易笔数"
+      - name: vehicle_count
+        description: "车辆数"
+        meta:
+          column_name_cn: "车辆数"
+      - name: normal_rate
+        description: "正常交易率"
+        meta:
+          column_name_cn: "正常交易率"
+    meta:
+      table_name_cn: "日收费收入汇总表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "日"
+      owner: "收费中心"
+      
+  - name: dws_traffic_flow_daily
+    description: "日车流量汇总，按日期、收费站、时段等维度汇总车流量"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: station_id
+        description: "收费站ID"
+        meta:
+          column_name_cn: "收费站ID"
+      - name: total_vehicles
+        description: "总车流量"
+        meta:
+          column_name_cn: "总车流量"
+      - name: unique_vehicles
+        description: "唯一车辆数"
+        meta:
+          column_name_cn: "唯一车辆数"
+      - name: time_period
+        description: "时段分类"
+        meta:
+          column_name_cn: "时段分类"
+    meta:
+      table_name_cn: "日车流量汇总表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "日"
+      owner: "收费中心"
+      
+  - name: dws_station_performance_daily
+    description: "收费站日绩效汇总，收费站维度的综合绩效指标"
+    columns:
+      - name: transaction_date
+        description: "交易日期"
+        meta:
+          column_name_cn: "交易日期"
+      - name: station_id
+        description: "收费站ID"
+        meta:
+          column_name_cn: "收费站ID"
+      - name: total_revenue
+        description: "日收入（元）"
+        meta:
+          column_name_cn: "日收入"
+      - name: normal_rate
+        description: "正常交易率"
+        meta:
+          column_name_cn: "正常交易率"
+      - name: data_quality_rate
+        description: "数据质量率"
+        meta:
+          column_name_cn: "数据质量率"
+      - name: etc_rate
+        description: "ETC使用率"
+        meta:
+          column_name_cn: "ETC使用率"
+    meta:
+      table_name_cn: "收费站日绩效汇总表"
+      business_domain: "收费业务"
+      data_source: "收费系统"
+      update_frequency: "日"
+      owner: "收费中心"
+
