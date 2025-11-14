@@ -8,3 +8,17 @@ venv/
 __pycache__/
 *.pyc
 
+# Frontend build artifacts
+web_ui/frontend/node_modules/
+web_ui/frontend/dist/
+
+# IDE / editor settings
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and local overrides
+logs/
+*.log
+.env.local
+

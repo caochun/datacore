@@ -7,7 +7,8 @@ import {
   ShareAltOutlined,
   CheckCircleOutlined,
   SearchOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  LineChartOutlined
 } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
@@ -42,6 +43,11 @@ const menuItems = [
     key: '/reports',
     icon: <BarChartOutlined />,
     label: '业务报表'
+  },
+  {
+    key: '/metrics',
+    icon: <LineChartOutlined />,
+    label: '语义层指标'
   }
 ]
 

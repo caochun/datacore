@@ -1,5 +1,99 @@
 version: 2
 
+# 语义模型定义
+semantic_models:
+  - name: toll_revenue_semantic_model
+    description: "收费收入语义模型，基于日收费收入汇总表"
+    model: ref('dws_toll_revenue_daily')
+    
+    # 定义度量（Measures）- 可聚合的数值字段
+    measures:
+      - name: total_revenue
+        description: "总收入"
+        agg: sum
+        expr: total_actual_amount
+        label: "总收入（元）"
+        
+      - name: transaction_count
+        description: "交易笔数"
+        agg: sum
+        expr: transaction_count
+        label: "交易笔数"
+        
+      - name: vehicle_count
+        description: "车辆数"
+        agg: sum
+        expr: vehicle_count
+        label: "车辆数"
+        
+      - name: normal_transaction_count
+        description: "正常交易数"
+        agg: sum
+        expr: normal_transaction_count
+        label: "正常交易数"
+        
+      - name: abnormal_transaction_count
+        description: "异常交易数"
+        agg: sum
+        expr: abnormal_transaction_count
+        label: "异常交易数"
+        
+      - name: avg_transaction_amount
+        description: "平均交易金额"
+        agg: average
+        expr: avg_transaction_amount
+        label: "平均交易金额（元）"
+        
+      - name: quality_normal_count
+        description: "数据质量正常记录数"
+        agg: sum
+        expr: quality_normal_count
+        label: "质量正常记录数"
+    
+    # 定义维度（Dimensions）- 用于分组和过滤的字段
+    dimensions:
+      - name: transaction_date
+        type: time
+        type_params:
+          time_granularity: day
+        label: "交易日期"
+        description: "交易日期，支持按日、周、月、年聚合"
+        
+      - name: city
+        type: categorical
+        label: "城市"
+        description: "收费站所在城市"
+        
+      - name: station_name
+        type: categorical
+        label: "收费站名称"
+        description: "收费站名称"
+        
+      - name: station_id
+        type: categorical
+        label: "收费站ID"
+        description: "收费站唯一标识"
+        
+      - name: vehicle_type_name
+        type: categorical
+        label: "车型名称"
+        description: "车辆类型名称"
+        
+      - name: payment_method_name
+        type: categorical
+        label: "支付方式"
+        description: "支付方式名称"
+        
+      - name: highway_code
+        type: categorical
+        label: "高速公路编码"
+        description: "高速公路编码"
+        
+      - name: station_type
+        type: categorical
+        label: "收费站类型"
+        description: "主线收费站或匝道收费站"
+
 models:
   - name: dws_toll_revenue_daily
     description: "日收费收入汇总，按日期、收费站、车型、支付方式等维度汇总"

@@ -7,9 +7,32 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import duckdb
 import os
+import yaml
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+import logging
+from metricflow_client import MetricFlowClient
+from llm_query_parser import LLMQueryParser, LLMQueryParserWithAPI
+
+# 加载 .env 文件（如果存在）
+try:
+    from dotenv import load_dotenv
+    # 尝试从项目根目录加载 .env 文件
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    env_path = os.path.join(project_root, ".env")
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        logger = logging.getLogger(__name__)
+        logger.info(f"已加载 .env 文件: {env_path}")
+    else:
+        # 也尝试从当前目录加载
+        load_dotenv()
+except ImportError:
+    # python-dotenv 未安装，跳过
+    pass
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="数据中台API", version="1.0.0")
 
@@ -42,9 +65,167 @@ for path in possible_paths:
 if not DB_PATH:
     raise FileNotFoundError("找不到 datacore.duckdb 数据库文件")
 
+# dbt 项目路径
+DBT_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+# 初始化 MetricFlow 客户端
+_metricflow_client = None
+
 def get_db():
     """获取数据库连接"""
     return duckdb.connect(DB_PATH)
+
+def get_metricflow_client() -> MetricFlowClient:
+    """获取 MetricFlow 客户端（单例）"""
+    global _metricflow_client
+    if _metricflow_client is None:
+        _metricflow_client = MetricFlowClient(
+            project_dir=DBT_PROJECT_ROOT,
+            profiles_dir=os.path.join(DBT_PROJECT_ROOT, ".")
+        )
+    return _metricflow_client
+
+def load_metrics_config():
+    """从 dbt 配置文件加载指标定义"""
+    metrics_file = os.path.join(DBT_PROJECT_ROOT, "models", "metrics.yml")
+    if not os.path.exists(metrics_file):
+        return []
+    
+    with open(metrics_file, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+        return config.get('metrics', [])
+
+def load_semantic_model():
+    """从 dbt schema.yml 加载语义模型定义"""
+    schema_file = os.path.join(DBT_PROJECT_ROOT, "models", "dws", "schema.yml")
+    if not os.path.exists(schema_file):
+        return None
+    
+    with open(schema_file, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+        semantic_models = config.get('semantic_models', [])
+        if semantic_models:
+            return semantic_models[0]  # 返回第一个语义模型
+        return None
+
+def get_measure_info(measure_name: str, semantic_model: Dict) -> Optional[Dict]:
+    """获取 measure 的定义信息"""
+    if not semantic_model:
+        return None
+    measures = semantic_model.get('measures', [])
+    for measure in measures:
+        if measure.get('name') == measure_name:
+            return measure
+    return None
+
+def generate_metric_sql(metric: Dict, semantic_model: Dict, dimensions: List[str] = None, 
+                        start_date: str = None, end_date: str = None, filters: Dict = None) -> str:
+    """根据指标定义和语义模型生成 SQL（从 dbt 配置动态生成）"""
+    metric_type = metric.get('type')
+    type_params = metric.get('type_params', {})
+    
+    # 获取语义模型对应的表
+    model_ref = semantic_model.get('model', 'dws_toll_revenue_daily')
+    # 从 ref('xxx') 中提取表名
+    if isinstance(model_ref, str) and "ref('" in model_ref:
+        table_name = model_ref.split("ref('")[1].split("')")[0]
+    else:
+        table_name = str(model_ref).replace("ref('", "").replace("')", "")
+    
+    # 构建表名（DuckDB 格式）
+    full_table_name = f"main_dws.{table_name}"
+    
+    # 构建 SELECT 子句
+    select_fields = ["transaction_date"]
+    
+    # 添加维度字段
+    valid_dimensions = []
+    if dimensions:
+        semantic_dims = {d['name']: d for d in semantic_model.get('dimensions', [])}
+        for dim in dimensions:
+            if dim in semantic_dims:
+                select_fields.append(dim)
+                valid_dimensions.append(dim)
+    
+    # 构建聚合表达式
+    if metric_type == 'simple':
+        # 简单指标：直接使用 measure 的聚合
+        measure_name = type_params.get('measure')
+        measure_info = get_measure_info(measure_name, semantic_model)
+        
+        if not measure_info:
+            raise ValueError(f"找不到 measure: {measure_name}")
+        
+        measure_expr = measure_info.get('expr')
+        measure_agg = measure_info.get('agg', 'sum')
+        
+        if measure_agg == 'sum':
+            agg_expr = f"SUM({measure_expr})"
+        elif measure_agg == 'average':
+            agg_expr = f"AVG({measure_expr})"
+        elif measure_agg == 'count':
+            agg_expr = f"COUNT({measure_expr})"
+        else:
+            agg_expr = f"{measure_agg.upper()}({measure_expr})"
+        select_fields.append(f"{agg_expr} as metric_value")
+    
+    elif metric_type == 'ratio':
+        # 比率指标：分子/分母
+        numerator_measure = get_measure_info(type_params.get('numerator'), semantic_model)
+        denominator_measure = get_measure_info(type_params.get('denominator'), semantic_model)
+        
+        if not numerator_measure or not denominator_measure:
+            raise ValueError(f"比率指标需要定义 numerator 和 denominator")
+        
+        num_expr = numerator_measure.get('expr')
+        num_agg = numerator_measure.get('agg', 'sum')
+        den_expr = denominator_measure.get('expr')
+        den_agg = denominator_measure.get('agg', 'sum')
+        
+        if num_agg == 'sum':
+            numerator = f"SUM({num_expr})"
+        else:
+            numerator = f"{num_agg.upper()}({num_expr})"
+        
+        if den_agg == 'sum':
+            denominator = f"SUM({den_expr})"
+        else:
+            denominator = f"{den_agg.upper()}({den_expr})"
+        
+        select_fields.append(f"{numerator} * 100.0 / {denominator} as metric_value")
+    
+    else:
+        raise ValueError(f"不支持的指标类型: {metric_type}")
+    
+    # 构建 SQL
+    sql = f"SELECT {', '.join(select_fields)}\n"
+    sql += f"FROM {full_table_name}\n"
+    sql += "WHERE 1=1\n"
+    
+    # 添加时间过滤
+    if start_date:
+        sql += f" AND transaction_date >= '{start_date}'\n"
+    if end_date:
+        sql += f" AND transaction_date <= '{end_date}'\n"
+    
+    # 添加其他过滤条件
+    if filters:
+        for key, value in filters.items():
+            if key in valid_dimensions:
+                if isinstance(value, list):
+                    values_str = ', '.join([f"'{v}'" for v in value])
+                    sql += f" AND {key} IN ({values_str})\n"
+                else:
+                    sql += f" AND {key} = '{value}'\n"
+    
+    # 添加 GROUP BY（排除 metric_value）
+    group_by_fields = select_fields[:-1]  # 排除最后一个 metric_value
+    sql += f" GROUP BY {', '.join(group_by_fields)}\n"
+    
+    # 添加 ORDER BY
+    sql += " ORDER BY transaction_date"
+    
+    return sql
 
 # ==================== 数据模型 ====================
 
@@ -83,6 +264,29 @@ class ColumnInfo(BaseModel):
     name: str
     description: Optional[str] = None
     data_type: Optional[str] = None
+
+class MetricInfo(BaseModel):
+    name: str
+    description: str
+    label: str
+    type: str
+    business_domain: Optional[str] = None
+    owner: Optional[str] = None
+    unit: Optional[str] = None
+
+class MetricQuery(BaseModel):
+    metric_name: str
+    dimensions: Optional[List[str]] = None
+    filters: Optional[Dict[str, Any]] = None
+    time_granularity: Optional[str] = None  # day, week, month, year
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class NaturalLanguageQuery(BaseModel):
+    query: str  # 用户的自然语言问题
+    use_llm: Optional[bool] = False  # 是否使用 LLM（需要配置 API Key）
+    provider: Optional[str] = None  # LLM 提供商 ("openai", "deepseek")，默认从环境变量读取
+    model: Optional[str] = None  # 模型名称，默认从环境变量读取
 
 # ==================== API路由 ====================
 
@@ -541,6 +745,262 @@ async def get_traffic_report(days: int = 30):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
+
+@app.get("/api/metrics", response_model=List[MetricInfo])
+async def get_metrics():
+    """获取所有可用的业务指标列表（优先从 MetricFlow 读取，失败则从 dbt metrics.yml 读取）"""
+    try:
+        # 首先尝试从 MetricFlow 获取
+        mf_client = get_metricflow_client()
+        mf_metrics = mf_client.list_metrics()
+        
+        if mf_metrics:
+            # 转换 MetricFlow 格式到 API 格式
+            metrics = []
+            for mf_metric in mf_metrics:
+                # MetricFlow 返回的格式可能不同，需要适配
+                metric_name = mf_metric.get('name') or mf_metric.get('metric_name', '')
+                if metric_name:
+                    metrics.append({
+                        "name": metric_name,
+                        "description": mf_metric.get('description', ''),
+                        "label": mf_metric.get('label') or mf_metric.get('display_name', metric_name),
+                        "type": mf_metric.get('type', 'simple'),
+                        "business_domain": mf_metric.get('business_domain'),
+                        "owner": mf_metric.get('owner'),
+                        "unit": mf_metric.get('unit')
+                    })
+            
+            if metrics:
+                return [MetricInfo(**m) for m in metrics]
+        
+        # 如果 MetricFlow 失败，回退到配置文件
+        logger.info("MetricFlow 未返回指标，使用配置文件")
+        metrics_config = load_metrics_config()
+        if not metrics_config:
+            return []
+        
+        # 转换为 API 响应格式
+        metrics = []
+        for metric in metrics_config:
+            meta = metric.get('meta', {})
+            metrics.append({
+                "name": metric.get('name'),
+                "description": metric.get('description', ''),
+                "label": metric.get('label', metric.get('name')),
+                "type": metric.get('type', 'simple'),
+                "business_domain": meta.get('business_domain'),
+                "owner": meta.get('owner'),
+                "unit": meta.get('unit')
+            })
+        
+        return [MetricInfo(**m) for m in metrics]
+    except Exception as e:
+        logger.error(f"加载指标失败: {e}")
+        raise HTTPException(status_code=500, detail=f"加载指标配置失败: {str(e)}")
+
+@app.post("/api/metrics/query")
+async def query_metric(query: MetricQuery):
+    """根据指标名称和维度查询数据（使用 MetricFlow 生成 SQL）"""
+    conn = get_db()
+    try:
+        # 使用 MetricFlow 生成 SQL
+        mf_client = get_metricflow_client()
+        
+        # 构建 WHERE 条件
+        where_conditions = []
+        if query.filters:
+            for key, value in query.filters.items():
+                if isinstance(value, list):
+                    values_str = ', '.join([f"'{v}'" for v in value])
+                    where_conditions.append(f"{key} IN ({values_str})")
+                else:
+                    where_conditions.append(f"{key} = '{value}'")
+        
+        # 构建分组维度（包括时间维度）
+        group_by = []
+        if query.dimensions:
+            group_by.extend(query.dimensions)
+        # MetricFlow 需要时间维度
+        group_by.append('transaction_date')
+        
+        # 使用 MetricFlow 生成 SQL
+        mf_result = mf_client.query_metrics(
+            metrics=[query.metric_name],
+            group_by=group_by if group_by else None,
+            where=where_conditions if where_conditions else None,
+            start_time=query.start_date,
+            end_time=query.end_date
+        )
+        
+        if not mf_result.get('success', True) or not mf_result.get('sql'):
+            # 如果 MetricFlow 失败，回退到原来的方法
+            logger.warning(f"MetricFlow 生成 SQL 失败，使用备用方法: {mf_result.get('error', 'Unknown error')}")
+            return await _query_metric_fallback(query, conn)
+        
+        sql = mf_result['sql']
+        
+        # 执行查询
+        result = conn.execute(sql).fetchall()
+        columns = [desc[0] for desc in conn.description]
+        
+        return {
+            "metric_name": query.metric_name,
+            "data": [dict(zip(columns, row)) for row in result],
+            "query_sql": sql,  # 返回生成的SQL，便于调试和审计
+            "generated_by": "MetricFlow"  # 标识由 MetricFlow 生成
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        # 如果出错，回退到原来的方法
+        logger.error(f"MetricFlow 查询失败: {e}，使用备用方法")
+        return await _query_metric_fallback(query, conn)
+    finally:
+        conn.close()
+
+async def _query_metric_fallback(query: MetricQuery, conn):
+    """备用查询方法（使用原来的配置驱动方式）"""
+    try:
+        # 从 dbt 配置文件加载指标定义
+        metrics_config = load_metrics_config()
+        semantic_model = load_semantic_model()
+        
+        if not metrics_config:
+            raise HTTPException(status_code=500, detail="无法加载指标配置")
+        
+        if not semantic_model:
+            raise HTTPException(status_code=500, detail="无法加载语义模型")
+        
+        # 查找指定的指标
+        metric = None
+        for m in metrics_config:
+            if m.get('name') == query.metric_name:
+                metric = m
+                break
+        
+        if not metric:
+            raise HTTPException(status_code=404, detail=f"指标 {query.metric_name} 不存在")
+        
+        # 使用 dbt 配置动态生成 SQL
+        sql = generate_metric_sql(
+            metric=metric,
+            semantic_model=semantic_model,
+            dimensions=query.dimensions,
+            start_date=query.start_date,
+            end_date=query.end_date,
+            filters=query.filters
+        )
+        
+        # 执行查询
+        result = conn.execute(sql).fetchall()
+        columns = [desc[0] for desc in conn.description]
+        
+        return {
+            "metric_name": query.metric_name,
+            "data": [dict(zip(columns, row)) for row in result],
+            "query_sql": sql,
+            "generated_by": "Config-based"  # 标识由配置生成
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
+
+@app.post("/api/metrics/query/natural")
+async def query_metric_natural(nl_query: NaturalLanguageQuery):
+    """
+    使用自然语言查询指标（支持 LLM 解析）
+    
+    示例：
+    - "查询最近7天的日收入，按城市分组"
+    - "显示北京本月的交易笔数"
+    - "查看昨天的正常交易率"
+    """
+    try:
+        # 获取可用指标和维度
+        metrics_config = load_metrics_config()
+        if not metrics_config:
+            raise HTTPException(status_code=500, detail="无法加载指标配置")
+        
+        # 可用维度
+        semantic_model = load_semantic_model()
+        available_dimensions = []
+        if semantic_model:
+            available_dimensions = [d['name'] for d in semantic_model.get('dimensions', [])]
+        
+        # 转换为 API 格式
+        metrics_for_parser = []
+        for m in metrics_config:
+            metrics_for_parser.append({
+                'name': m.get('name'),
+                'label': m.get('label', m.get('name')),
+                'description': m.get('description', '')
+            })
+        
+        # 选择解析器
+        if nl_query.use_llm:
+            # 使用 LLM 解析（需要配置 API Key）
+            # 可以从环境变量读取，支持 OpenAI 和 DeepSeek
+            api_key = os.getenv('DEEPSEEK_API_KEY') or os.getenv('OPENAI_API_KEY') or os.getenv('LLM_API_KEY')
+            
+            # 根据参数或环境变量选择提供商
+            provider = nl_query.provider or os.getenv('LLM_PROVIDER', 'openai').lower()
+            if provider == 'deepseek' or os.getenv('DEEPSEEK_API_KEY'):
+                provider = 'deepseek'
+                model = nl_query.model or os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+                # 确保使用 DeepSeek API Key
+                if not api_key or not os.getenv('DEEPSEEK_API_KEY'):
+                    api_key = os.getenv('DEEPSEEK_API_KEY')
+            else:
+                provider = 'openai'
+                model = nl_query.model or os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+            
+            parser = LLMQueryParserWithAPI(
+                available_metrics=metrics_for_parser,
+                available_dimensions=available_dimensions,
+                api_key=api_key,
+                model=model,
+                provider=provider
+            )
+        else:
+            # 使用规则解析
+            parser = LLMQueryParser(
+                available_metrics=metrics_for_parser,
+                available_dimensions=available_dimensions
+            )
+        
+        # 解析自然语言查询
+        parsed_query = parser.parse(nl_query.query)
+        
+        if not parsed_query.get('metric_name'):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"无法从问题中识别指标。可用指标: {[m['name'] for m in metrics_for_parser]}"
+            )
+        
+        # 构建 MetricQuery
+        metric_query = MetricQuery(
+            metric_name=parsed_query['metric_name'],
+            dimensions=parsed_query.get('dimensions'),
+            start_date=parsed_query.get('start_date'),
+            end_date=parsed_query.get('end_date'),
+            filters=parsed_query.get('filters')
+        )
+        
+        # 执行查询（复用现有逻辑）
+        conn = get_db()
+        try:
+            result = await _query_metric_fallback(metric_query, conn)
+            result['parsed_query'] = parsed_query  # 返回解析结果，便于调试
+            result['original_query'] = nl_query.query
+            return result
+        finally:
+            conn.close()
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"自然语言查询失败: {e}")
+        raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
 
 @app.get("/api/stats/overview")
 async def get_stats_overview():

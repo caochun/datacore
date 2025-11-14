@@ -8,6 +8,7 @@ import DataLineage from './pages/DataLineage'
 import DataQuality from './pages/DataQuality'
 import DataExplorer from './pages/DataExplorer'
 import BusinessReports from './pages/BusinessReports'
+import Metrics from './pages/Metrics'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/quality" element={<DataQuality />} />
           <Route path="/explorer" element={<DataExplorer />} />
           <Route path="/reports" element={<BusinessReports />} />
+          <Route path="/metrics" element={<Metrics />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>

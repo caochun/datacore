@@ -1,0 +1,103 @@
+version: 2
+
+# 业务指标定义
+# 这些指标基于语义模型中定义的 measures，可以在多个端点（BI工具、API、AI）中复用
+
+metrics:
+  # ========== 收入相关指标 ==========
+  
+  - name: daily_revenue
+    description: "日收费收入"
+    type: simple
+    type_params:
+      measure: total_revenue
+    label: "日收费收入"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "元"
+      
+  - name: monthly_revenue
+    description: "月收费收入"
+    type: simple
+    type_params:
+      measure: total_revenue
+    label: "月收费收入"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "元"
+      
+  - name: avg_transaction_amount
+    description: "平均交易金额"
+    type: simple
+    type_params:
+      measure: avg_transaction_amount
+    label: "平均交易金额"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "元"
+  
+  # ========== 交易量相关指标 ==========
+  
+  - name: daily_transactions
+    description: "日交易笔数"
+    type: simple
+    type_params:
+      measure: transaction_count
+    label: "日交易笔数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "笔"
+      
+  - name: daily_vehicles
+    description: "日车辆数"
+    type: simple
+    type_params:
+      measure: vehicle_count
+    label: "日车辆数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "辆"
+  
+  # ========== 质量相关指标 ==========
+  
+  - name: normal_transaction_rate
+    description: "正常交易率"
+    type: ratio
+    type_params:
+      numerator: normal_transaction_count
+      denominator: transaction_count
+    label: "正常交易率"
+    meta:
+      business_domain: "数据质量"
+      owner: "数据管理部"
+      unit: "%"
+      
+  - name: data_quality_rate
+    description: "数据质量率"
+    type: ratio
+    type_params:
+      numerator: quality_normal_count
+      denominator: transaction_count
+    label: "数据质量率"
+    meta:
+      business_domain: "数据质量"
+      owner: "数据管理部"
+      unit: "%"
+      
+  - name: abnormal_transaction_rate
+    description: "异常交易率"
+    type: ratio
+    type_params:
+      numerator: abnormal_transaction_count
+      denominator: transaction_count
+    label: "异常交易率"
+    meta:
+      business_domain: "数据质量"
+      owner: "数据管理部"
+      unit: "%"
+
