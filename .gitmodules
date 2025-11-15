@@ -1,0 +1,6 @@
+[submodule "dbt-core"]
+	path = dbt-core
+	url = https://github.com/dbt-labs/dbt-core.git
+[submodule "metricflow"]
+	path = metricflow
+	url = https://github.com/dbt-labs/metricflow.git

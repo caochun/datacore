@@ -34,6 +34,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# 配置日志级别和格式，确保 INFO 级别的日志能够输出
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 app = FastAPI(title="数据中台API", version="1.0.0")
 
 # CORS配置
@@ -954,6 +961,8 @@ async def query_metric_natural(nl_query: NaturalLanguageQuery):
                 provider = 'openai'
                 model = nl_query.model or os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
             
+            logger.info(f"使用 LLM 解析自然语言查询: provider={provider}, model={model}, query={nl_query.query}")
+            
             parser = LLMQueryParserWithAPI(
                 available_metrics=metrics_for_parser,
                 available_dimensions=available_dimensions,
@@ -963,6 +972,7 @@ async def query_metric_natural(nl_query: NaturalLanguageQuery):
             )
         else:
             # 使用规则解析
+            logger.info(f"使用规则解析自然语言查询: query={nl_query.query}")
             parser = LLMQueryParser(
                 available_metrics=metrics_for_parser,
                 available_dimensions=available_dimensions
@@ -970,6 +980,7 @@ async def query_metric_natural(nl_query: NaturalLanguageQuery):
         
         # 解析自然语言查询
         parsed_query = parser.parse(nl_query.query)
+        logger.info(f"解析结果: {parsed_query}")
         
         if not parsed_query.get('metric_name'):
             raise HTTPException(

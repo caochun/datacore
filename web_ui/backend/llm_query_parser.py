@@ -300,7 +300,25 @@ class LLMQueryParserWithAPI:
                 }
                 
                 logger.info(f"混合解析：LLM识别指标/维度，规则解析器计算时间")
+                
+                # 打印最终解析结果
+                result_json = json.dumps(final_result, ensure_ascii=False, indent=2)
+                logger.info("=" * 80)
+                logger.info("最终解析结果（混合策略）:")
+                logger.info("=" * 80)
+                logger.info(result_json)
+                logger.info("=" * 80)
+                
                 return final_result
+            
+            # 打印最终解析结果（纯 LLM）
+            if llm_result:
+                result_json = json.dumps(llm_result, ensure_ascii=False, indent=2)
+                logger.info("=" * 80)
+                logger.info("最终解析结果（纯 LLM）:")
+                logger.info("=" * 80)
+                logger.info(result_json)
+                logger.info("=" * 80)
             
             return llm_result
         
@@ -410,6 +428,13 @@ class LLMQueryParserWithAPI:
         try:
             import openai
             
+            # 打印发送给 LLM 的 prompt
+            logger.info("=" * 80)
+            logger.info("发送给 OpenAI LLM 的 Prompt:")
+            logger.info("=" * 80)
+            logger.info(prompt)
+            logger.info("=" * 80)
+            
             openai.api_key = self.api_key
             response = openai.ChatCompletion.create(
                 model=self.model,
@@ -421,6 +446,13 @@ class LLMQueryParserWithAPI:
             )
             
             result_text = response.choices[0].message.content.strip()
+            
+            # 打印 LLM 返回的结果
+            logger.info("=" * 80)
+            logger.info("OpenAI LLM 返回的原始结果:")
+            logger.info("=" * 80)
+            logger.info(result_text)
+            logger.info("=" * 80)
             # 提取 JSON
             json_match = re.search(r'\{.*\}', result_text, re.DOTALL)
             if json_match:
@@ -442,6 +474,13 @@ class LLMQueryParserWithAPI:
         """使用 DeepSeek API 解析"""
         try:
             import requests
+            
+            # 打印发送给 LLM 的 prompt
+            logger.info("=" * 80)
+            logger.info("发送给 DeepSeek LLM 的 Prompt:")
+            logger.info("=" * 80)
+            logger.info(prompt)
+            logger.info("=" * 80)
             
             # DeepSeek API 端点
             api_url = "https://api.deepseek.com/v1/chat/completions"
@@ -466,6 +505,13 @@ class LLMQueryParserWithAPI:
             
             result = response.json()
             result_text = result['choices'][0]['message']['content'].strip()
+            
+            # 打印 LLM 返回的结果
+            logger.info("=" * 80)
+            logger.info("DeepSeek LLM 返回的原始结果:")
+            logger.info("=" * 80)
+            logger.info(result_text)
+            logger.info("=" * 80)
             
             # 提取 JSON
             json_match = re.search(r'\{.*\}', result_text, re.DOTALL)

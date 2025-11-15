@@ -182,11 +182,8 @@ venv\Scripts\activate
 #### 1.2 安装 Python 依赖
 
 ```bash
-# 安装 dbt 相关依赖
+# 安装所有依赖（dbt + 后端服务）
 pip install -r requirements.txt
-
-# 安装 Web UI 后端依赖
-pip install -r web_ui/backend/requirements.txt
 ```
 
 #### 1.3 安装前端依赖

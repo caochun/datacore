@@ -1,14 +1,17 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-duckdb==1.4.1
-pydantic==2.5.0
-python-multipart==0.0.6
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-dbt-metricflow>=0.209.0
-pyyaml>=6.0
-openai>=1.0.0  # 可选：用于 OpenAI LLM 自然语言查询
-requests>=2.31.0  # 用于 DeepSeek 等 API 调用
-python-dotenv>=1.0.0  # 用于加载 .env 文件
-
-
+# ============================================
+# 注意：此文件已迁移到项目根目录
+# ============================================
+# 
+# 所有 Python 依赖已统一管理在项目根目录的 requirements.txt
+# 请使用以下命令安装依赖：
+# 
+#   pip install -r ../../requirements.txt
+# 
+# 或从项目根目录：
+# 
+#   pip install -r requirements.txt
+# 
+# ============================================
+# 保留此文件仅用于向后兼容
+# 实际依赖请参考根目录的 requirements.txt
+# ============================================
