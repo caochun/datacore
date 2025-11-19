@@ -63,6 +63,51 @@ metrics:
       owner: "收费中心"
       unit: "辆"
   
+    
+  - name: normal_transaction_count
+    description: "正常交易数"
+    type: simple
+    type_params:
+      measure: normal_transaction_count
+    label: "正常交易数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "笔"
+    
+  - name: transaction_count
+    description: "交易数"
+    type: simple
+    type_params:
+      measure: transaction_count
+    label: "交易数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "笔"
+    
+  - name: quality_normal_count
+    description: "数据质量合格数"
+    type: simple
+    type_params:
+      measure: quality_normal_count
+    label: "数据质量合格数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "笔"
+    
+  - name: abnormal_transaction_count
+    description: "异常交易数"
+    type: simple
+    type_params:
+      measure: abnormal_transaction_count
+    label: "异常交易数"
+    meta:
+      business_domain: "收费业务"
+      owner: "收费中心"
+      unit: "笔"
+
   # ========== 质量相关指标 ==========
   
   - name: normal_transaction_rate

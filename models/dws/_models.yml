@@ -1,0 +1,21 @@
+models:
+  - name: time_spine_daily
+    description: "日时间维度表，用于 semantic model 时间聚合"
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day
+        description: "日期，按日粒度"
+      - name: day_of_week
+        granularity: day
+        description: "星期几"
+      - name: full_date
+        granularity: day
+        description: "完整日期"
+    meta:
+      table_name_cn: "日时间维度表"
+      business_domain: "数据管理"
+      data_source: "数据中台"
+      update_frequency: "按需"
+      owner: "数据管理部"

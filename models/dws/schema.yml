@@ -6,6 +6,17 @@ semantic_models:
     description: "收费收入语义模型，基于日收费收入汇总表"
     model: ref('dws_toll_revenue_daily')
     
+    # 设置默认的时间维度（所有 measure 默认使用这个时间维度）
+    defaults:
+      agg_time_dimension: transaction_date
+
+    # 定义实体（Entities）- 业务对象的唯一标识
+    entities:
+      - name: station_id
+        type: primary
+        description: "收费站唯一标识"
+        label: "收费站ID"
+
     # 定义度量（Measures）- 可聚合的数值字段
     measures:
       - name: total_revenue
@@ -69,10 +80,10 @@ semantic_models:
         label: "收费站名称"
         description: "收费站名称"
         
-      - name: station_id
-        type: categorical
-        label: "收费站ID"
-        description: "收费站唯一标识"
+      # - name: station_id
+      #   type: categorical
+      #   label: "收费站ID"
+      #   description: "收费站唯一标识"
         
       - name: vehicle_type_name
         type: categorical

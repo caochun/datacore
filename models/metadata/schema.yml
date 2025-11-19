@@ -115,4 +115,23 @@ models:
     meta:
       business_domain: "数据管理"
       data_source: "数据中台"
+      
+  - name: meta_column_info
+    description: "列信息元数据表，记录所有表列的元数据信息"
+    columns:
+      - name: schema_name
+        description: "模式名称"
+      - name: table_name
+        description: "表名"
+      - name: column_name
+        description: "列名"
+      - name: column_name_cn
+        description: "中文列名"
+      - name: column_description
+        description: "列描述"
+      - name: create_time
+        description: "创建时间"
+    meta:
+      business_domain: "数据管理"
+      data_source: "数据中台"
 
